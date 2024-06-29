@@ -1,5 +1,6 @@
 package com.yukesh.uptime
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,14 +29,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yukesh.uptime.ui.theme.UptimeTheme
+//import com.yukesh.uptime.utils.PreferenceManager
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        val sharedPreferences= PreferenceManager(applicationContext)
         setContent {
-
             UptimeTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -52,21 +54,32 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(modifier: Modifier = Modifier) {
-    var isLockEnabled by remember {
-        mutableStateOf(true);
+fun App(modifier: Modifier = Modifier ) {
+
+//    var data= sharedPreferences.getData("MYPREF",false )
+
+    val isLockEnabled = remember {
+        mutableStateOf(false);
     }
+
+    var isLocked by remember {
+        mutableStateOf(true)
+    }
+
     Column(modifier = modifier) {
-        if (isLockEnabled) LockScreen() else Home(isLockEnabled){
-            value-> isLockEnabled=value
-        }
+        if (isLockEnabled.value && isLocked) LockScreen(){
+            value-> isLocked=value
+        } else Home(isLockEnabled)
     }
 }
 
 @Composable
-fun LockScreen(){
+fun LockScreen(onLockChanged: (Boolean) -> Unit){
     var pinValue by remember {
         mutableStateOf("")
+    }
+    var pin by remember {
+        mutableStateOf("1234")
     }
     Box(modifier = Modifier
         .fillMaxSize()
@@ -75,6 +88,10 @@ fun LockScreen(){
             OutlinedTextField(value = pinValue , onValueChange ={
                 if(it!=""){
                     pinValue=it
+
+                    if(pin==pinValue){
+                        onLockChanged(false)
+                    }
                 }
             } )
         }
@@ -82,27 +99,17 @@ fun LockScreen(){
 }
 
 @Composable
-fun Home(isLockEnabled:Boolean, onLockChanged: (Boolean)->Unit) {
-
-    var pin by remember {
-        mutableStateOf("1234")
-    }
+fun Home(isLockEnabled:MutableState<Boolean>) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),
             ) {
             Text(text = "Lock enabled")
-             Switch(checked = isLockEnabled, onCheckedChange = {
-                 onLockChanged(it)
+             Switch(checked = isLockEnabled.value, onCheckedChange = {
+                 isLockEnabled.value=it;
              })
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    UptimeTheme {
-        App()
-    }
-}
+

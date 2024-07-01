@@ -48,7 +48,6 @@ fun App(modifier: Modifier = Modifier, context: Context) {
     val sharedPreferences = context.getSharedPreferences("PREF", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
     val isLockEnabled = remember { mutableStateOf(false) }
-    // dummy comment
 
     var isLocked by remember { mutableStateOf(isLockEnabled.value) }
 

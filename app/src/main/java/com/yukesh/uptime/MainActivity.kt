@@ -42,86 +42,91 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun App(modifier: Modifier = Modifier, context: Context) {
+        val sharedPreferences = context.getSharedPreferences("PREF", Context.MODE_PRIVATE)
+        val scope = rememberCoroutineScope()
+        val isLockEnabled = remember { mutableStateOf(false) }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun App(modifier: Modifier = Modifier, context: Context) {
-    val sharedPreferences = context.getSharedPreferences("PREF", Context.MODE_PRIVATE)
-    val scope = rememberCoroutineScope()
-    val isLockEnabled = remember { mutableStateOf(false) }
+        var isLocked by remember { mutableStateOf(isLockEnabled.value) }
 
-    var isLocked by remember { mutableStateOf(isLockEnabled.value) }
-
-    LaunchedEffect(Unit) {
-        isLockEnabled.value = withContext(Dispatchers.IO) {
-            sharedPreferences.getBoolean("isLocked", false)
+        LaunchedEffect(Unit) {
+            isLockEnabled.value = withContext(Dispatchers.IO) {
+                sharedPreferences.getBoolean("isLocked", false)
+            }
+            isLocked = isLockEnabled.value
         }
-        isLocked = isLockEnabled.value
-    }
 
-    Column(modifier = modifier) {
-        if (isLockEnabled.value && isLocked) {
-            LockScreen { value -> isLocked = value }
-        } else {
-            Home(isLockEnabled, sharedPreferences,context)
-        }
-    }
-}
-
-@Composable
-fun LockScreen(onLockChanged: (Boolean) -> Unit) {
-    var pinValue by remember { mutableStateOf("") }
-    val correctPin = "1234"
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White)
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            OutlinedTextField(value = pinValue, onValueChange = {
-                pinValue = it
-                if (it == correctPin) {
-                    onLockChanged(false)
-                }
-            })
+        Column(modifier = modifier) {
+            if (isLockEnabled.value && isLocked) {
+                LockScreen { value -> isLocked = value }
+            } else {
+                Home(isLockEnabled, sharedPreferences,context)
+            }
         }
     }
-}
 
-@Composable
-fun Home(isLockEnabled: MutableState<Boolean>, sharedPreferences: SharedPreferences,context: Context) {
-    val scope = rememberCoroutineScope()
-    val packageManager = context.packageManager
-    val apps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-    val packageNames = mutableListOf<String>()
-    for (app in apps) {
-        packageNames.add(app.packageName)
-    }
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+    @Composable
+    fun LockScreen(onLockChanged: (Boolean) -> Unit) {
+        var pinValue by remember { mutableStateOf("") }
+        val correctPin = "1234"
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.White)
         ) {
-            Text(text = "Lock enabled")
-            Switch(checked = isLockEnabled.value, onCheckedChange = {
-                isLockEnabled.value = it
-                Log.d("AppDebug", "Lock state changed: $it")
-                scope.launch(Dispatchers.IO) {
-                    sharedPreferences.edit().putBoolean("isLocked", it).apply()
-                    Log.d("AppDebug", "Lock state saved to SharedPreferences")
-                }
-            })
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                OutlinedTextField(value = pinValue, onValueChange = {
+                    pinValue = it
+                    if (it == correctPin) {
+                        onLockChanged(false)
+                    }
+                })
+            }
+        }
+    }
+
+    @Composable
+    fun Home(isLockEnabled: MutableState<Boolean>, sharedPreferences: SharedPreferences,context: Context) {
+        val scope = rememberCoroutineScope()
+        val packageManager = context.packageManager
+        val apps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        val packageNames = mutableListOf<String>()
+        // Populate packageNames with package names of installed apps
+        apps.forEach { app ->
+            packageNames.add(app.packageName)
         }
 
-        LazyColumn {
-            items(packageNames.size) { i ->
-                ListItem(headlineContent = { Text(text = "${packageNames[i]}") } )
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Lock enabled")
+                Switch(checked = isLockEnabled.value, onCheckedChange = {
+                    isLockEnabled.value = it
+                    Log.d("AppDebug", "Lock state changed: $it")
+                    scope.launch(Dispatchers.IO) {
+                        sharedPreferences.edit().putBoolean("isLocked", it).apply()
+                        Log.d("AppDebug", "Lock state saved to SharedPreferences")
+                    }
+                })
             }
 
+            LazyColumn {
+                items(packageNames.size) { i ->
+                    ListItem(headlineContent = { Text(text = "${packageNames[i]}") } )
+                }
+
+            }
         }
     }
+
 }
+
+
+

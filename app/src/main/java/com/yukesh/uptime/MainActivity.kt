@@ -2,6 +2,7 @@ package com.yukesh.uptime
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,19 +54,17 @@ fun App(modifier: Modifier = Modifier, context: Context) {
     var isLocked by remember { mutableStateOf(isLockEnabled.value) }
 
     LaunchedEffect(Unit) {
-        Log.d("AppDebug", "Loading lock state from SharedPreferences")
         isLockEnabled.value = withContext(Dispatchers.IO) {
             sharedPreferences.getBoolean("isLocked", false)
         }
         isLocked = isLockEnabled.value
-        Log.d("AppDebug", "Lock state loaded: ${isLockEnabled.value}")
     }
 
     Column(modifier = modifier) {
         if (isLockEnabled.value && isLocked) {
             LockScreen { value -> isLocked = value }
         } else {
-            Home(isLockEnabled, sharedPreferences)
+            Home(isLockEnabled, sharedPreferences,context)
         }
     }
 }
@@ -91,8 +91,14 @@ fun LockScreen(onLockChanged: (Boolean) -> Unit) {
 }
 
 @Composable
-fun Home(isLockEnabled: MutableState<Boolean>, sharedPreferences: SharedPreferences) {
+fun Home(isLockEnabled: MutableState<Boolean>, sharedPreferences: SharedPreferences,context: Context) {
     val scope = rememberCoroutineScope()
+    val packageManager = context.packageManager
+    val apps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+    val packageNames = mutableListOf<String>()
+    for (app in apps) {
+        packageNames.add(app.packageName)
+    }
 
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Row(
@@ -109,6 +115,13 @@ fun Home(isLockEnabled: MutableState<Boolean>, sharedPreferences: SharedPreferen
                     Log.d("AppDebug", "Lock state saved to SharedPreferences")
                 }
             })
+        }
+
+        LazyColumn {
+            items(packageNames.size) { i ->
+                ListItem(headlineContent = { Text(text = "${packageNames[i]}") } )
+            }
+
         }
     }
 }

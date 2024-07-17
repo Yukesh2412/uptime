@@ -1,6 +1,7 @@
 package com.yukesh.uptime
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -23,11 +24,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.provider.Settings
+
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestAccessibilityPermission()
         enableEdgeToEdge()
         setContent {
             UptimeTheme {
@@ -41,6 +45,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun requestAccessibilityPermission() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        startActivity(intent)
     }
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable

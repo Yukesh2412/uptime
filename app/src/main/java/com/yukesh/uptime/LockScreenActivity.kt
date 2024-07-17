@@ -1,5 +1,8 @@
 package com.yukesh.uptime
 
+import android.app.ActivityManager
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,11 +26,18 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 class LockScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+        )
         setContent {
             UptimeTheme {
                 var isLocked by remember { mutableStateOf(true) }
@@ -38,6 +48,32 @@ class LockScreenActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        navigateToHome()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        resetLockScreenFlag()
+    }
+
+    private fun resetLockScreenFlag() {
+        val serviceIntent = Intent(this, AppLockAccessibilityService::class.java)
+        serviceIntent.action = "RESET_LOCK_SCREEN_FLAG"
+        startService(serviceIntent)
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_HOME)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+//        finish()
+        resetLockScreenFlag()
     }
 }
 

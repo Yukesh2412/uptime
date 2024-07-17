@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -25,7 +26,9 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-        <activity android:name=".LockScreenActivity" android:exported="true"  android:label="@string/app_name" android:theme="@style/Theme.Uptime"/>
+        <activity android:name=".LockScreenActivity" android:exported="true"  android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+             android:label="@string/app_name" android:theme="@style/Theme.Uptime"/>
 
         <activity
             android:name=".MainActivity"

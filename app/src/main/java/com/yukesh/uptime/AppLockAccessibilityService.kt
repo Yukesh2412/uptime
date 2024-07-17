@@ -8,10 +8,12 @@ import android.view.accessibility.AccessibilityEvent
 class AppLockAccessibilityService : AccessibilityService() {
 
     private val lockedApps = listOf("com.hcm.hr365")
+    private var isLockScreenShown = false
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString()
-            if (packageName != null && packageName in lockedApps) {
+            if (packageName != null && packageName in lockedApps && !isLockScreenShown) {
                 showLockScreen()
             }
         }
@@ -22,9 +24,11 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun showLockScreen() {
-        val intent = Intent(this, LockScreenActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
+        isLockScreenShown = true
+        val lockScreenIntent = Intent(this, LockScreenActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        }
+        startActivity(lockScreenIntent)
     }
 
     override fun onServiceConnected() {
@@ -34,5 +38,9 @@ class AppLockAccessibilityService : AccessibilityService() {
             notificationTimeout = 100
         }
         this.serviceInfo = info
+    }
+
+    fun resetLockScreenFlag() {
+        isLockScreenShown = false
     }
 }

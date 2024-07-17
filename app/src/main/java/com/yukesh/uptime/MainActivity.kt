@@ -31,7 +31,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestAccessibilityPermission()
         enableEdgeToEdge()
         setContent {
             UptimeTheme {
@@ -110,11 +109,16 @@ class MainActivity : ComponentActivity() {
         }
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            TextButton(onClick = { requestAccessibilityPermission()
+            }) {
+                Text(text = "Open settings")
+            }
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
+
                 Text(text = "Lock enabled")
                 Switch(checked = isLockEnabled.value, onCheckedChange = {
                     isLockEnabled.value = it
